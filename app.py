@@ -23,9 +23,32 @@ if uploaded_file is not None:
             buzz = str(row['Buzzwords']).split(',') if pd.notna(row['Buzzwords']) else []
             industry_list.extend([item.strip() for item in inds + buzz if item.strip()])
 
-        top_n = st.slider('Number of top industries/buzzwords to display:', min_value=5, max_value=20, value=10)
         industry_counter = Counter(industry_list)
-        topN = industry_counter.most_common(top_n)
+        
+        # Get all unique industries sorted by count
+        all_industries = [k for k, v in industry_counter.most_common()]
+        
+        # Exclusion multiselect
+        excluded_industries = st.multiselect(
+            'Exclude specific industries/buzzwords:',
+            options=all_industries,
+            default=[]
+        )
+        
+        # Filter out excluded industries
+        filtered_counter = {k: v for k, v in industry_counter.items() if k not in excluded_industries}
+        
+        # Number input for top N
+        max_available = len(filtered_counter)
+        top_n = st.number_input(
+            'Number of top industries/buzzwords to display:',
+            min_value=1,
+            max_value=max_available,
+            value=min(10, max_available)
+        )
+        
+        # Get top N from filtered data
+        topN = Counter(filtered_counter).most_common(top_n)
         labels = [k for k, v in topN]
         counts = [v for k, v in topN]
 
